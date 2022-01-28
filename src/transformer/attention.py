@@ -15,9 +15,9 @@ def attention(query, key, value, mask=None, dropout=None):
     In this implementation, in the case of self-attention, query, key and value are
     the same input matrix multiplied by respective weight matrices
 
-    :param query: Tensor, phrase_length x n_features
-    :param key:   Tensor, phrase_length x n_features
-    :param value: Tensor, phrase_length x n_features
+    :param query: Tensor, batch_size x no_heads x n_features x d_k
+    :param key:   Tensor, batch_size x no_heads x n_features x d_k
+    :param value: Tensor, batch_size x no_heads x n_features x d_v
     :param mask:  Tensor, phrase_length x phrase_length; where mask == 0, weights will
                   be zeroed-out before applying softmax
     :param dropout: dropout probability, applied after applying the mask

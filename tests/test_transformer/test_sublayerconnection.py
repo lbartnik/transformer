@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
-import pytest
-from transformer import SublayerConnection, LayerNorm
+from transformer import SublayerConnection
 
 def test_without_dropout():
     sc = SublayerConnection(2, 0)
