@@ -38,7 +38,9 @@ def test_normalizes_with_minibatch():
     input = torch.Tensor([[[1,2,3], [1,2,4]], [[1,3,8], [1,8,9]]])
     normalized = l(input)
 
-    normalized.data == pytest.approx(torch.Tensor([
-        [[-1, 0, 1], [-0.8729, -0.2182,  1.0911]],
-        [[-0.8321, -0.2774,  1.1094], [-1.1471,  0.4588,  0.6882]]
-    ]))
+    expected = torch.Tensor([[[-1.0000,  0.0000,  1.0000],
+         [-0.8729, -0.2182,  1.0911]],
+
+        [[-0.8321, -0.2774,  1.1094],
+         [-1.1471,  0.4588,  0.6882]]])
+    assert normalized.allclose(expected, rtol=0, atol=0.001)

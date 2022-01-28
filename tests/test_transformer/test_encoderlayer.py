@@ -15,7 +15,7 @@ def test_encoderlayer():
     input = torch.Tensor([[1,2], [0,2]]).unsqueeze(0)
 
     # simply the output which matches this random seed
-    expected = torch.Tensor([[0.7359, 2.5578], [-0.2713, 2.3813]]).unsqueeze(0)
+    expected = torch.Tensor([[1.0186, 2.0927], [0.0186, 2.0927]]).unsqueeze(0)
 
     output = el(input, None)
-    expected.allclose(output, atol=0.01, rtol=0)
+    assert expected.allclose(output, atol=1e-3, rtol=0)
