@@ -3,5 +3,6 @@ from .layernorm import *
 from .sublayerconnection import *
 from .attention import *
 from .multiheadedattention import *
+from .encoderlayer import *
 
-__all__ = ['clones', 'LayerNorm', 'SublayerConnection', 'attention', 'MultiHeadedAttention']
+__all__ = ['clones', 'LayerNorm', 'SublayerConnection', 'attention', 'MultiHeadedAttention', 'EncoderLayer']
