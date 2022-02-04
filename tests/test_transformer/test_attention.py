@@ -3,6 +3,7 @@ import torch
 from transformer import attention
 
 def test_attention():
+    # TODO this should be a mini-batch of phrases of word embeddings
     query = torch.diag(torch.Tensor(range(10)))
     key   = torch.diag(torch.Tensor(range(10)))
     value = torch.ones(10, 10)

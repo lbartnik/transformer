@@ -15,13 +15,16 @@ def attention(query, key, value, mask=None, dropout=None):
     In this implementation, in the case of self-attention, query, key and value are
     the same input matrix multiplied by respective weight matrices
 
-    :param query: Tensor, batch_size x no_heads x n_features x d_k
-    :param key:   Tensor, batch_size x no_heads x n_features x d_k
-    :param value: Tensor, batch_size x no_heads x n_features x d_v
+    :param query: Tensor, batch_size x no_heads x phrase_length x d_k
+    :param key:   Tensor, batch_size x no_heads x phrase_length x d_k
+    :param value: Tensor, batch_size x no_heads x phrase_length x d_v
     :param mask:  Tensor, phrase_length x phrase_length; where mask == 0, weights will
                   be zeroed-out before applying softmax
     :param dropout: dropout probability, applied after applying the mask
-    :return: Tensor phrase_length x n_features; context vectors for encoder/decoder
+    :return: Tensor batch_size x no_heads x phrase_length x d_v; context vectors for
+             encoder/decoder which will be concatenated into a Tensor of shape
+             batch_size x no_heads x n_features and pushed through a n_features x n_features
+             linear layer before becoming the final output of the Multi-Headed Attention layer.
     """
     # d_k is the size of the word embedding space
     d_k = query.size(-1)
