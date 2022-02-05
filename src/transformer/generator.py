@@ -8,5 +8,4 @@ class Generator(nn.Module):
         self.proj = nn.Linear(n_features, vocab)
 
     def forward(self, x):
-        return self.proj(x)
-#        return F.log_softmax(self.proj(x), dim=-1)
+        return F.log_softmax(self.proj(x), dim=-1)

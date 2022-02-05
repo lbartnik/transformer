@@ -18,4 +18,4 @@ def test_encoderdecoder():
     # of words; thus, we "concatenate" all sequences in the minibatch into
     # one large sequence-batch
     loss = criterion(torch.exp(output.view(-1, 10)), tgt.reshape(-1))
-    assert 2.6558 == pytest.approx(loss.item())
+    assert 2.3061273 == pytest.approx(loss.item())

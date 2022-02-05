@@ -31,4 +31,4 @@ class SimpleLossCompute:
             self.opt.optimizer.zero_grad()
         
         # reverse the earlier normalization and return the total loss
-        return loss.data[0] * norm
+        return loss.item() * norm
