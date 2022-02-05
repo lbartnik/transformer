@@ -14,8 +14,9 @@ from .positionalencoding import *
 from .generator import *
 from .encoderdecoder import *
 from .batch import *
+from .labelsmoothing import *
 
 __all__ = ['clones', 'LayerNorm', 'SublayerConnection', 'attention', 'MultiHeadedAttention',
            'EncoderLayer', 'Encoder', 'subsequent_mask', 'PositionwiseFeedForward',
            'DecoderLayer', 'decoderlayer', 'Decoder', 'Embeddings', 'PositionalEncoding',
-           'Generator', 'EncoderDecoder', 'Batch']
+           'Generator', 'EncoderDecoder', 'Batch', 'LabelSmoothing']
