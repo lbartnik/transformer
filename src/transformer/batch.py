@@ -19,6 +19,7 @@ class Batch:
             # the next word in the sequence
             self.trg_y = trg[:, 1:]
             self.trg_mask = self.make_std_mask(self.trg, pad)
+            # how many tokens in the whole batch
             self.ntokens = (self.trg_y != pad).data.sum()
     
     @staticmethod

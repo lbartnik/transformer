@@ -15,8 +15,9 @@ from .generator import *
 from .encoderdecoder import *
 from .batch import *
 from .labelsmoothing import *
+from .simplelosscompute import *
 
 __all__ = ['clones', 'LayerNorm', 'SublayerConnection', 'attention', 'MultiHeadedAttention',
            'EncoderLayer', 'Encoder', 'subsequent_mask', 'PositionwiseFeedForward',
            'DecoderLayer', 'decoderlayer', 'Decoder', 'Embeddings', 'PositionalEncoding',
-           'Generator', 'EncoderDecoder', 'Batch', 'LabelSmoothing']
+           'Generator', 'EncoderDecoder', 'Batch', 'LabelSmoothing', 'SimpleLossCompute']
