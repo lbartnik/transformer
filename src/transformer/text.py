@@ -62,22 +62,29 @@ from torch.nn.utils.rnn import pad_sequence
 
 from .batch import Batch
 
+def pad(lists, phrase_len):
+    return torch.LongTensor([l + [PAD_IDX] * (phrase_len - len(l)) for l in lists])
+
 class Batchify:
-    def __init__(self, data, batch_tokens=1000, pad_idx=PAD_IDX):
+    def __init__(self, data, batch_tokens=1000, pad_idx=PAD_IDX, cuda=False):
         self.data = data
         self.batch_tokens = batch_tokens
         self.pad_idx = pad_idx
+        self.cuda = cuda
 
     def next(self):
         src = []
         tgt = []
         total_tokens = 0
         while total_tokens < self.batch_tokens:
-            s, t = next(self.data)
-            src.append(torch.LongTensor([BOS_IDX] + s + [EOS_IDX]))
-            tgt.append(torch.LongTensor([BOS_IDX] + t + [EOS_IDX]))
-            total_tokens += len(s) + len(t) + 4
-        src, tgt = [pad_sequence(x, padding_value=self.pad_idx).transpose(0, 1) for x in [src, tgt]]
+            sr, tg = next(self.data)
+            src.append([BOS_IDX] + sr + [EOS_IDX])
+            tgt.append([BOS_IDX] + tg + [EOS_IDX])
+            total_tokens += len(sr) + len(tg) + 4
+        src = pad(src, max(map(len, src)))
+        tgt = pad(tgt, max(map(len, tgt)))
+        if self.cuda:
+            src, tgt = src.cuda(), tgt.cuda()
         return Batch(src, tgt, self.pad_idx)
     
     def __next__(self):
@@ -94,28 +101,44 @@ from .labelsmoothing import LabelSmoothing
 from .noamopt import NoamOpt
 from .runepoch import run_epoch
 from .simplelosscompute import SimpleLossCompute
+from .greedydecode import greedy_decode
 
 class Translation:
-    def __init__(self, src_vocab, tgt_vocab, padding_idx=PAD_IDX):
+    def __init__(self, src_vocab, tgt_vocab, padding_idx=PAD_IDX, cuda=False):
         self.model = make_model(src_vocab, tgt_vocab)
+        if cuda:
+            self.model.cuda()
+        
         self.tgt_vocab = tgt_vocab
         self.padding_idx = padding_idx
+        self.cuda = cuda
 
     def train(self, train, test, nepoch=10, batch_tokens=1000):
         criterion = LabelSmoothing(size=self.tgt_vocab, padding_idx=self.padding_idx, smoothing=.1)
+        if self.cuda:
+            criterion.cuda()
         
         model_opt = NoamOpt(self.model.src_embed[0].n_features, 1, 400,
                 torch.optim.Adam(self.model.parameters(), lr=0, betas=(0.9, 0.98), eps=1e-9))
 
         for epoch in range(nepoch):
             self.model.train()
-            b = Batchify(iter(train), batch_tokens=batch_tokens)
+            b = Batchify(iter(train), batch_tokens=batch_tokens, cuda=self.cuda)
             run_epoch(b, self.model, SimpleLossCompute(criterion, model_opt))
 
             self.model.eval()
-            b = Batchify(iter(test), batch_tokens=batch_tokens)
+            b = Batchify(iter(test), batch_tokens=batch_tokens, cuda=self.cuda)
             loss = run_epoch(b, self.model, SimpleLossCompute(criterion, None))
             print(f"Epoch {epoch} completed with validation loss {loss}")
+
+    def translate(self, src, start_symbol=BOS_IDX, max_len=5000):
+        if type(src) is list:
+            src = torch.LongTensor(src)
+            while len(src.shape) != 2:
+                src.unsqueeze_(0)
+
+        ans = greedy_decode(self.model, src, src != self.padding_idx, max_len, start_symbol)
+        return ans[:ans.index(EOS_IDX)]
 
 if __name__ == "__main__":
     vocab_en, vocab_de = vocab()
