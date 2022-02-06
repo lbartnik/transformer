@@ -20,9 +20,11 @@ from .noamopt import *
 from .runepoch import *
 from .makemodel import *
 from .syntheticdata import *
+from .text import *
 
 __all__ = ['clones', 'LayerNorm', 'SublayerConnection', 'attention', 'MultiHeadedAttention',
            'EncoderLayer', 'Encoder', 'subsequent_mask', 'PositionwiseFeedForward',
            'DecoderLayer', 'decoderlayer', 'Decoder', 'Embeddings', 'PositionalEncoding',
            'Generator', 'EncoderDecoder', 'Batch', 'LabelSmoothing', 'SimpleLossCompute',
-           'NoamOpt', 'get_std_opt', 'run_epoch', 'make_model', 'SyntheticData']
+           'NoamOpt', 'get_std_opt', 'run_epoch', 'make_model', 'SyntheticData',
+           'vocab', 'indices', 'Translation']
