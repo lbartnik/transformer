@@ -19,7 +19,11 @@ class SimpleLossCompute:
 
         # cast output of the NN (x) as 2D Tensor of shape: [batch_size * phrase_length, target_vocab_size]
         # cast target (y) as 1D Tensor of shape: [batch_size * phrase_length]
-        # loss per single token
+        #
+        # loss per single token: normalization is necessary if we want to maintain a stable
+        # rate of learning - since the value of loss translates directly to the step taken by
+        # SGD, we want to maintain similar sizes of the optimizer step across all mini-batches
+        # in an epoch
         loss = self.criterion(x.contiguous().view(-1, x.size(-1)), 
                               y.contiguous().view(-1)) / norm
         
