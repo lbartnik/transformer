@@ -116,7 +116,7 @@ class Translation:
         self.padding_idx = padding_idx
         self.cuda = cuda
 
-    def train(self, train, test, nepoch=10, batch_tokens=1000, base_lr=1, warmup=400):
+    def train(self, train, test, nepoch=10, batch_tokens=1000, base_lr=1, warmup=2000):
         criterion = LabelSmoothing(size=self.tgt_vocab, padding_idx=self.padding_idx, smoothing=.1)
         if self.cuda:
             criterion.cuda()
@@ -133,6 +133,9 @@ class Translation:
             b = Batchify(iter(test), batch_tokens=batch_tokens, cuda=self.cuda)
             loss = run_epoch(b, self.model, SimpleLossCompute(criterion, None))
             print(f"Epoch {epoch} completed with validation loss per token {loss}")
+
+            if epoch % 10 == 1:
+                self.save("checkpoint.bin")
 
     def translate(self, src, start_symbol=BOS_IDX, max_len=5000):
         if type(src) is list:
@@ -151,7 +154,8 @@ class Translation:
     
     @staticmethod
     def load(src_vocab, tgt_vocab, path, cuda=True):
-        model = torch.load(path)
+        map_location = "cuda" if cuda else "cpu"
+        model = torch.load(path, map_location=map_location)
         return Translation(src_vocab, tgt_vocab, cuda=cuda, model=model)
 
 
