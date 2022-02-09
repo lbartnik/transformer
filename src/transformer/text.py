@@ -157,8 +157,7 @@ class Translation:
             loss = run_epoch(b, self.model, SimpleLossCompute(criterion, None))
             print(f"Epoch {epoch} completed with validation loss per token {loss}")
 
-            if epoch % 10 == 1:
-                self.save("checkpoint.bin")
+            self.save("checkpoint.bin")
 
     def translate(self, src, start_symbol=BOS_IDX, max_len=5000):
         if type(src) is list:
