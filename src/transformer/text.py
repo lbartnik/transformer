@@ -58,6 +58,7 @@ def indices(vocab_en, vocab_de):
 # --- batchify ---
 
 import torch
+import random
 from .batch import Batch
 
 
@@ -66,26 +67,48 @@ def pad(lists, phrase_len):
 
 class Batchify:
     def __init__(self, data, batch_tokens=1000, pad_idx=PAD_IDX, cuda=False):
+        assert type(data) == list
         self.data = data
         self.batch_tokens = batch_tokens
         self.pad_idx = pad_idx
         self.cuda = cuda
+        self.batches = None
 
     def next(self):
+        if not self.batches:
+            self._prepare_batches()
+
+        begin, end = next(self.batches)
         src = []
         tgt = []
-        total_tokens = 0
-        while total_tokens < self.batch_tokens:
-            sr, tg = next(self.data)
+
+        for sr, tg in self.data[begin:end]:
             src.append([BOS_IDX] + sr + [EOS_IDX])
             tgt.append([BOS_IDX] + tg + [EOS_IDX])
-            total_tokens += len(sr) + len(tg) + 4
         src = pad(src, max(map(len, src)))
         tgt = pad(tgt, max(map(len, tgt)))
+
         if self.cuda:
             src, tgt = src.cuda(), tgt.cuda()
         return Batch(src, tgt, self.pad_idx)
     
+    def _prepare_batches(self):
+        begin, end = 0, 0
+        tokens = 0
+        indices = []
+        for src, trg in self.data:
+            new_tokens = len(src) + len(trg) + 4
+            if tokens + new_tokens <= self.batch_tokens:
+                tokens += new_tokens
+            else:
+                indices.append((begin, end))
+                begin = end
+                tokens = new_tokens
+            end += 1
+        indices.append((begin, end))
+        random.shuffle(indices)
+        self.batches = iter(indices)
+
     def __next__(self):
         return self.next()
 
@@ -126,11 +149,11 @@ class Translation:
 
         for epoch in range(nepoch):
             self.model.train()
-            b = Batchify(iter(train), batch_tokens=batch_tokens, cuda=self.cuda)
+            b = Batchify(train, batch_tokens=batch_tokens, cuda=self.cuda)
             run_epoch(b, self.model, SimpleLossCompute(criterion, model_opt))
 
             self.model.eval()
-            b = Batchify(iter(test), batch_tokens=batch_tokens, cuda=self.cuda)
+            b = Batchify(test, batch_tokens=batch_tokens, cuda=self.cuda)
             loss = run_epoch(b, self.model, SimpleLossCompute(criterion, None))
             print(f"Epoch {epoch} completed with validation loss per token {loss}")
 

@@ -27,4 +27,4 @@ __all__ = ['clones', 'LayerNorm', 'SublayerConnection', 'attention', 'MultiHeade
            'DecoderLayer', 'decoderlayer', 'Decoder', 'Embeddings', 'PositionalEncoding',
            'Generator', 'EncoderDecoder', 'Batch', 'LabelSmoothing', 'SimpleLossCompute',
            'NoamOpt', 'get_std_opt', 'run_epoch', 'make_model', 'SyntheticData',
-           'vocab', 'indices', 'Translation']
+           'vocab', 'indices', 'Translation', 'Batchify']
