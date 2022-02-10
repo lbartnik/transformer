@@ -77,19 +77,13 @@ class Batchify:
     def next(self):
         if not self.batches:
             self._prepare_batches()
-
-        begin, end = next(self.batches)
-        src = []
-        tgt = []
-
-        for sr, tg in self.data[begin:end]:
-            src.append([BOS_IDX] + sr + [EOS_IDX])
-            tgt.append([BOS_IDX] + tg + [EOS_IDX])
-        src = pad(src, max(map(len, src)))
-        tgt = pad(tgt, max(map(len, tgt)))
-
+            self._batches_to_tensors()
+            self.batches = iter(self.batches)
+        
+        src, tgt = next(self.batches)
         if self.cuda:
             src, tgt = src.cuda(), tgt.cuda()
+        
         return Batch(src, tgt, self.pad_idx)
     
     def _prepare_batches(self):
@@ -107,7 +101,21 @@ class Batchify:
             end += 1
         indices.append((begin, end))
         random.shuffle(indices)
-        self.batches = iter(indices)
+        self.batches = indices
+    
+    def _batches_to_tensors(self):
+        ans = []
+        for begin, end in self.batches:            
+            src = []
+            tgt = []
+
+            for sr, tg in self.data[begin:end]:
+                src.append([BOS_IDX] + sr + [EOS_IDX])
+                tgt.append([BOS_IDX] + tg + [EOS_IDX])
+            src = pad(src, max(map(len, src)))
+            tgt = pad(tgt, max(map(len, tgt)))
+            ans.append((src, tgt))
+        self.batches = ans
 
     def __next__(self):
         return self.next()
