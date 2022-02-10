@@ -88,16 +88,13 @@ class Batchify:
     
     def _prepare_batches(self):
         begin, end = 0, 0
-        tokens = 0
+        max_phrase_length = 0
         indices = []
         for src, trg in self.data:
-            new_tokens = len(src) + len(trg) + 4
-            if tokens + new_tokens <= self.batch_tokens:
-                tokens += new_tokens
-            else:
+            max_phrase_length = max(max_phrase_length, len(src) + len(trg) + 4)
+            if (end-begin+1)*max_phrase_length > self.batch_tokens:
                 indices.append((begin, end))
                 begin = end
-                tokens = new_tokens
             end += 1
         indices.append((begin, end))
         random.shuffle(indices)
