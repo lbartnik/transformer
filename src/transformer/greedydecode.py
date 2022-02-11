@@ -16,6 +16,7 @@ def greedy_decode(model, src, src_mask, max_len, start_symbol):
     for i in range(max_len-1):
         out = model.decode(memory, src_mask, ys, subsequent_mask(ys.size(1)).type_as(src.data))
         prob = model.generator(out[:, -1])
+        prob[0, ys[0][-1]] = -100 # do not return the same word as the last word in the input
         _, next_word = torch.max(prob, dim = 1)
         next_word = next_word.data[0]
         ys = torch.cat([ys, 
