@@ -36,11 +36,12 @@ class SyntheticData:
             self.model.train()
             run_epoch(data_gen(self.vocab, 30, 20), self.model, 
                     SimpleLossCompute(criterion, model_opt))
+            
             self.model.eval()
-
-            loss = run_epoch(data_gen(self.vocab, 30, 5), self.model, 
-                            SimpleLossCompute(criterion, None))
-            print(f"Epoch {epoch} completed with validation loss {loss}")
+            with torch.no_grad():
+                loss = run_epoch(data_gen(self.vocab, 30, 5), self.model, 
+                                SimpleLossCompute(criterion, None))
+                print(f"Epoch {epoch} completed with validation loss {loss}")
 
     def translate(self, src, start_symbol, max_len=5000):
         if type(src) is list:

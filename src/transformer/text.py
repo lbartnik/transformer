@@ -158,9 +158,10 @@ class Translation:
             run_epoch(b, self.model, SimpleLossCompute(criterion, model_opt))
 
             self.model.eval()
-            b = Batchify(test, batch_tokens=batch_tokens, cuda=self.cuda)
-            loss = run_epoch(b, self.model, SimpleLossCompute(criterion, None))
-            print(f"Epoch {epoch} completed with validation loss per token {loss}")
+            with torch.no_grad():
+                b = Batchify(test, batch_tokens=batch_tokens, cuda=self.cuda)
+                loss = run_epoch(b, self.model, SimpleLossCompute(criterion, None))
+                print(f"Epoch {epoch} completed with validation loss per token {loss}")
 
             self.save("checkpoint.bin")
 
