@@ -22,5 +22,6 @@ class LabelSmoothing(nn.Module):
         mask = torch.nonzero(target.data == self.padding_idx)
         if mask.dim() > 0:
             true_dist.index_fill_(0, mask.squeeze(), 0.0)
+        true_dist.requires_grad_(False)
         self.true_dist = true_dist
         return self.criterion(x, true_dist)

@@ -5,4 +5,4 @@ def test_syntheticdata():
     s = SyntheticData(11, 4, 2)
     s.train(1)
     o = s.translate([1, 2, 3], 1, 5)
-    assert o.squeeze().tolist() == [1, 3, 3, 3, 3]
+    assert o.squeeze().tolist() == [1, 3, 10, 7, 10]

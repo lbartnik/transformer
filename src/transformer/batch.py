@@ -31,4 +31,5 @@ class Batch:
         # mask out positions filled with padding and everything ahead of the current
         # position; decoder is not allowed to know future words in the output sequence
         tgt_mask = tgt_mask & subsequent_mask(tgt.size(-1)).type_as(tgt_mask.data)
+        tgt_mask.requires_grad_(False)
         return tgt_mask
