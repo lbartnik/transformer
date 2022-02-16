@@ -136,31 +136,34 @@ class Translation:
             self.model = model
         else:
             self.model = make_model(src_vocab, tgt_vocab)
-        
+
+        self.criterion = LabelSmoothing(size=self.tgt_vocab, padding_idx=self.padding_idx, smoothing=.1)
+
         if cuda:
             self.model.cuda()
-        
+            self.criterion.cuda()
+
+        self.model_opt = NoamOpt(self.model.src_embed[0].n_features, 1, 4000,
+                torch.optim.Adam(self.model.parameters(), lr=0, betas=(0.9, 0.98), eps=1e-9))
+
         self.tgt_vocab = tgt_vocab
         self.padding_idx = padding_idx
         self.cuda = cuda
 
-    def train(self, train, test, nepoch=10, batch_tokens=1000, base_lr=1, warmup=2000):
-        criterion = LabelSmoothing(size=self.tgt_vocab, padding_idx=self.padding_idx, smoothing=.1)
-        if self.cuda:
-            criterion.cuda()
+    def train(self, train, test, nepoch=10, batch_tokens=1000, base_lr=1, warmup=4000):
         
-        model_opt = NoamOpt(self.model.src_embed[0].n_features, base_lr, warmup,
-                torch.optim.Adam(self.model.parameters(), lr=0, betas=(0.9, 0.98), eps=1e-9))
+        self.model_opt.factor = base_lr
+        self.model_opt.warmup = warmup
 
         for epoch in range(nepoch):
             self.model.train()
             b = Batchify(train, batch_tokens=batch_tokens, cuda=self.cuda)
-            run_epoch(b, self.model, SimpleLossCompute(criterion, model_opt))
+            run_epoch(b, self.model, SimpleLossCompute(self.criterion, self.model_opt))
 
             self.model.eval()
             with torch.no_grad():
                 b = Batchify(test, batch_tokens=batch_tokens, cuda=self.cuda)
-                loss = run_epoch(b, self.model, SimpleLossCompute(criterion, None))
+                loss = run_epoch(b, self.model, SimpleLossCompute(self.criterion, None))
                 print(f"Epoch {epoch} completed with validation loss per token {loss}")
 
             self.save("checkpoint.bin")
