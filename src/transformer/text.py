@@ -132,6 +132,12 @@ from .greedydecode import greedy_decode
 
 class Translation:
     def __init__(self, src_vocab, tgt_vocab, padding_idx=PAD_IDX, cuda=False, model=None):
+        self.tgt_vocab = tgt_vocab
+        self.padding_idx = padding_idx
+        self.cuda = cuda
+        self.train_loss_history = []
+        self.test_loss_history = []
+
         if model:
             self.model = model
         else:
@@ -146,10 +152,6 @@ class Translation:
         self.model_opt = NoamOpt(self.model.src_embed[0].n_features, 1, 4000,
                 torch.optim.Adam(self.model.parameters(), lr=0, betas=(0.9, 0.98), eps=1e-9))
 
-        self.tgt_vocab = tgt_vocab
-        self.padding_idx = padding_idx
-        self.cuda = cuda
-
     def train(self, train, test, nepoch=10, batch_tokens=1000, base_lr=1, warmup=4000):
         
         self.model_opt.factor = base_lr
@@ -158,13 +160,15 @@ class Translation:
         for epoch in range(nepoch):
             self.model.train()
             b = Batchify(train, batch_tokens=batch_tokens, cuda=self.cuda)
-            run_epoch(b, self.model, SimpleLossCompute(self.criterion, self.model_opt))
+            loss = run_epoch(b, self.model, SimpleLossCompute(self.criterion, self.model_opt))
+            self.train_loss_history.append(loss)
 
             self.model.eval()
             with torch.no_grad():
                 b = Batchify(test, batch_tokens=batch_tokens, cuda=self.cuda)
                 loss = run_epoch(b, self.model, SimpleLossCompute(self.criterion, None))
                 print(f"Epoch {epoch} completed with validation loss per token {loss}")
+                self.test_loss_history.append(loss)
 
             self.save("checkpoint.bin")
 
