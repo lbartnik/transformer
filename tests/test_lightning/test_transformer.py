@@ -10,4 +10,5 @@ def test_transformer():
     trg = torch.LongTensor([[2,3,4,5], [6,7,8,9]])
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        t.training_step((src, trg))
+        loss = t.training_step((src, trg))
+    assert loss > 0
