@@ -88,11 +88,13 @@ class Batchify:
     
     def _prepare_batches(self):
         begin, end = 0, 0
-        max_phrase_length = 0
+        max_src_length = 0
+        max_trg_length = 0
         indices = []
         for src, trg in self.data:
-            max_phrase_length = max(max_phrase_length, len(src) + len(trg) + 4)
-            if (end-begin+1)*max_phrase_length > self.batch_tokens:
+            max_src_length = max(max_src_length, len(src) + 2)
+            max_trg_length = max(max_trg_length, len(trg) + 2)
+            if (end-begin+1)*(max_src_length+max_trg_length) > self.batch_tokens:
                 indices.append((begin, end))
                 begin = end
             end += 1
