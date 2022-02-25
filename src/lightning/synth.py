@@ -3,7 +3,7 @@ import torch.utils.data as data
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 
-from .transformer import Transformer
+from .lightningseq2seq import LightningSeq2Seq
 
 
 class SynthDataset(data.Dataset):
@@ -38,6 +38,6 @@ def run(L=10, N=10000, batch_size=100, max_epochs=180, device='cpu', checkpoint_
         ]
     )
 
-    model = Transformer(L, L)
+    model = LightningSeq2Seq(L, L)
     trainer.fit(model, train, val)
     
