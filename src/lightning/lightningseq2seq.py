@@ -45,7 +45,6 @@ class LightningSeq2Seq(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx=None):
         src, trg, trg_y = _prep_batch(batch)
-
         log_probs = self.model(src, trg)
         loss = self.loss_module(log_probs, trg_y)
         self.log("val_loss", loss)
