@@ -27,7 +27,7 @@ class TransformerModel(nn.Module):
     
     def forward(self, src, trg):
         out = self.transformer(self.src_embed(src), self.trg_embed(trg),
-                               tgt_mask=nn.Transformer.generate_square_subsequent_mask(trg.size(-1)),
+                               tgt_mask=nn.Transformer.generate_square_subsequent_mask(trg.size(-1)).to(src.device),
                                src_key_padding_mask=padding_mask(src, self.padding_idx),
                                tgt_key_padding_mask=padding_mask(trg, self.padding_idx))
         probs = self.generator(out)
