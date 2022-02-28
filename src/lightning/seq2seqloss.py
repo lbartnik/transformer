@@ -5,6 +5,7 @@ class Seq2SeqLoss(nn.Module):
         super(Seq2SeqLoss, self).__init__()
         self.loss = nn.NLLLoss(reduction='sum')
         self.padding_idx = padding_idx
+        self.ntokens = None
     
     def forward(self, input, target):
         r"""
@@ -13,5 +14,5 @@ class Seq2SeqLoss(nn.Module):
                 of tokens in the output sequences
             target (Tensor): 2D tensor with expected output token indices
         """
-        ntokens = (target != self.padding_idx).sum().float().item()
-        return self.loss(input.view(-1, input.size(-1)), target.contiguous().view(-1)) / ntokens 
+        self.ntokens = (target != self.padding_idx).sum().float().item()
+        return self.loss(input.view(-1, input.size(-1)), target.contiguous().view(-1)) / self.ntokens

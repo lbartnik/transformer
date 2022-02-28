@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import pytorch_lightning as pl
+import time
 
 from .scheduler import NoamScheduler
 from .transformermodel import TransformerModel
@@ -35,12 +36,18 @@ class LightningSeq2Seq(pl.LightningModule):
         return [optimizer], {"scheduler": scheduler, "interval": "step"}
 
     def training_step(self, batch, batch_idx=None):
+        start = time.time()
+
         src, trg, trg_y = _prep_batch(batch)
         log_probs = self.model(src, trg)
         loss = self.loss_module(log_probs, trg_y)
 
+        elapsed = time.time() - start
+
         # Logs the accuracy per epoch to tensorboard (weighted average over batches)
         self.log("train_loss", loss)
+        self.log("ntokens", self.loss_module.ntokens)
+        self.log("tok_sec", self.loss_module.ntokens/elapsed, prog_bar=True)
         return loss  # Return tensor to call ".backward" on
 
     def validation_step(self, batch, batch_idx=None):

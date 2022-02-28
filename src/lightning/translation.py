@@ -124,9 +124,15 @@ def batched_datasets(vocabs, no_tokens, path='data.bin'):
     return [BatchedTextDataset(d, no_tokens) for d in ds]
 
 
+# necessary to keep batch a 2D tensor; without this call DataLoader makes the already 2D tensor
+# into a 3D one
+def _unwrap_batch(data_batch):
+    assert len(data_batch) == 1
+    return data_batch[0]
+
 def batched_data_loaders(vocabs, no_tokens):
     train, val, test = batched_datasets(vocabs, no_tokens)
-    train = data.DataLoader(train, batch_size=1, shuffle=True)
-    val   = data.DataLoader(val,   batch_size=1, shuffle=False)
-    test  = data.DataLoader(test,  batch_size=1, shuffle=False)
+    train = data.DataLoader(train, batch_size=1, shuffle=True,  collate_fn=_unwrap_batch)
+    val   = data.DataLoader(val,   batch_size=1, shuffle=False, collate_fn=_unwrap_batch)
+    test  = data.DataLoader(test,  batch_size=1, shuffle=False, collate_fn=_unwrap_batch)
     return train, val, test
