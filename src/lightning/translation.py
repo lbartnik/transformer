@@ -53,6 +53,51 @@ class TextDataset(data.Dataset):
         return self.data[idx]
 
 
+class BatchedTextDataset(TextDataset):
+    def __init__(self, data, no_tokens):
+        self.data = _batch_by_tokens(data, no_tokens)
+
+
+def _batch_by_tokens(data, no_tokens, padding_idx=PAD_IDX):
+    # sort sequences by source length and then by target length
+    data = sorted(data, key = lambda x: (len(x[0]), len(x[1])))
+    indices = _find_indices(data, no_tokens)
+    return _collate(data, indices, padding_idx)
+
+
+def _find_indices(data, no_tokens):
+    # group sequences by their total padded length
+    begin, end = 0, 0
+    max_src_length = 0
+    max_trg_length = 0
+    indices = []
+    for src, trg in data:
+        max_src_length = max(max_src_length, len(src))
+        max_trg_length = max(max_trg_length, len(trg))
+        # if adding this sequence takes us above the limit, mark the batch boundary
+        if (end-begin+1)*(max_src_length+max_trg_length) > no_tokens:
+            indices.append((begin, end))
+            max_src_length, max_trg_length = len(src), len(trg)
+            begin = end
+        end += 1
+    # append the last batch
+    indices.append((begin, end))
+    return indices
+    
+def _collate(data, indices, padding_idx):
+    ans = []
+    for begin, end in indices:
+        src, tgt = [], []
+
+        for sr, tg in data[begin:end]:
+            src.append(torch.LongTensor(sr))
+            tgt.append(torch.LongTensor(tg))
+        src = pad_sequence(src, padding_value=padding_idx, batch_first=True)
+        tgt = pad_sequence(tgt, padding_value=padding_idx, batch_first=True)
+        ans.append((src, tgt))
+    return ans
+
+
 def datasets(vocabs, path='data.bin'):
     ds = numericalized(vocabs, path)
     return [TextDataset(d) for d in ds]
@@ -66,9 +111,22 @@ def generate_batch(data_batch, padding_idx=PAD_IDX):
     return src, tgt
 
 
-def dataloaders(vocabs, batch_size):
+def data_loaders(vocabs, batch_size):
     train, val, test = datasets(vocabs)
     train = data.DataLoader(train, batch_size=batch_size, shuffle=True,  collate_fn=generate_batch)
     val   = data.DataLoader(val,   batch_size=batch_size, shuffle=False, collate_fn=generate_batch)
     test  = data.DataLoader(test,  batch_size=batch_size, shuffle=False, collate_fn=generate_batch)
+    return train, val, test
+
+
+def batched_datasets(vocabs, no_tokens, path='data.bin'):
+    ds = numericalized(vocabs, path)
+    return [BatchedTextDataset(d, no_tokens) for d in ds]
+
+
+def batched_data_loaders(vocabs, no_tokens):
+    train, val, test = batched_datasets(vocabs, no_tokens)
+    train = data.DataLoader(train, batch_size=1, shuffle=True)
+    val   = data.DataLoader(val,   batch_size=1, shuffle=False)
+    test  = data.DataLoader(test,  batch_size=1, shuffle=False)
     return train, val, test
