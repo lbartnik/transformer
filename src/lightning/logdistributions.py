@@ -1,3 +1,4 @@
+import torch
 from pytorch_lightning.callbacks import Callback
 
 class LogDistributions(Callback):
@@ -15,7 +16,13 @@ class LogDistributions(Callback):
             record = trainer.current_epoch % self.epochs == 0
 
         if record:
+            _histogram = trainer.logger.experiment.add_histogram
+            _logabs = lambda x: torch.log(torch.abs(x) + 1e-20)
+
             for name, param in pl_module.named_parameters():
-                trainer.logger.experiment.add_histogram(name, param, trainer.global_step)
+                _histogram(name, param, trainer.global_step)
+                _histogram(f"{name}_log", _logabs(param), trainer.global_step)
+
                 if param.requires_grad:
-                    trainer.logger.experiment.add_histogram(f"{name}_grad", param.grad, trainer.global_step)
+                    _histogram(f"{name}_grad", param.grad, trainer.global_step)
+                    _histogram(f"{name}_grad_log", _logabs(param.grad), trainer.global_step)
