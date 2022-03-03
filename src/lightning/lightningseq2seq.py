@@ -10,7 +10,7 @@ from .seq2seqloss import Seq2SeqLoss
 
 
 class LightningSeq2Seq(pl.LightningModule):
-    def __init__(self, src_vocab, trg_vocab, d_model=512, h=8, N=6, ff_dim=2048, padding_idx=0, warmup=4000, factor=1):
+    def __init__(self, src_vocab, trg_vocab=None, d_model=512, h=8, N=6, ff_dim=2048, padding_idx=0, warmup=4000, factor=1):
         super(LightningSeq2Seq, self).__init__()
         self.model = TransformerModel(src_vocab, trg_vocab, d_model, h, N, ff_dim, padding_idx)
         self.loss_module = Seq2SeqLoss(padding_idx)

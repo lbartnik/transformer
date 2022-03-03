@@ -118,12 +118,6 @@ def data_loaders(vocabs, batch_size):
     test  = data.DataLoader(test,  batch_size=batch_size, shuffle=False, collate_fn=generate_batch)
     return train, val, test
 
-
-def batched_datasets(vocabs, no_tokens, path='data.bin'):
-    ds = numericalized(vocabs, path)
-    return [BatchedTextDataset(d, no_tokens) for d in ds]
-
-
 # necessary to keep batch a 2D tensor; without this call DataLoader makes the already 2D tensor
 # into a 3D one
 def _unwrap_batch(data_batch):
@@ -131,8 +125,11 @@ def _unwrap_batch(data_batch):
     return data_batch[0]
 
 def batched_data_loaders(vocabs, no_tokens):
-    train, val, test = batched_datasets(vocabs, no_tokens)
-    train = data.DataLoader(train, batch_size=1, shuffle=True,  collate_fn=_unwrap_batch)
-    val   = data.DataLoader(val,   batch_size=1, shuffle=False, collate_fn=_unwrap_batch)
-    test  = data.DataLoader(test,  batch_size=1, shuffle=False, collate_fn=_unwrap_batch)
+    train, val, test = numericalized(vocabs, 'data.bin')
+    return wrap_data(no_tokens, train, val, test)
+
+def wrap_data(no_tokens, train, val, test):
+    train = data.DataLoader(BatchedTextDataset(train, no_tokens), batch_size=1, shuffle=True,  collate_fn=_unwrap_batch)
+    val   = data.DataLoader(BatchedTextDataset(val, no_tokens),   batch_size=1, shuffle=False, collate_fn=_unwrap_batch)
+    test  = data.DataLoader(BatchedTextDataset(test, no_tokens),  batch_size=1, shuffle=False, collate_fn=_unwrap_batch)
     return train, val, test

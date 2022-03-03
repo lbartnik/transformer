@@ -9,21 +9,21 @@ from .paddingmask import padding_mask
 
 
 class TransformerModel(nn.Module):
-    def __init__(self, src_vocab, trg_vocab, d_model=512, h=8, N=6, ff_dim=2048, padding_idx=0):
+    def __init__(self, src_vocab, trg_vocab=None, d_model=512, h=8, N=6, ff_dim=2048, padding_idx=0):
         super(TransformerModel, self).__init__()
 
         self.src_embed = nn.Sequential(Embeddings(d_model, src_vocab, padding_idx), PositionalEncoding(d_model))
-        self.trg_embed = nn.Sequential(Embeddings(d_model, trg_vocab, padding_idx), PositionalEncoding(d_model))
+        if trg_vocab is not None:
+            self.trg_embed = nn.Sequential(Embeddings(d_model, trg_vocab, padding_idx), PositionalEncoding(d_model))
+        else:
+            self.trg_embed = self.src_embed
+            trg_vocab = src_vocab
+        
         self.transformer = nn.Transformer(d_model=d_model, nhead=h, num_encoder_layers=N, num_decoder_layers=N,
                                           dim_feedforward=ff_dim, batch_first=True)
         self.generator = nn.Linear(d_model, trg_vocab)
 
         self.padding_idx = padding_idx
-
-        # TODO differentiate
-        for p in self.parameters():
-            if p.dim() > 1:
-                nn.init.xavier_uniform_(p)
     
     def forward(self, src, trg):
         out = self.transformer(self.src_embed(src), self.trg_embed(trg),
